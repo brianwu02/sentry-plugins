@@ -383,15 +383,9 @@ class GitHubRepositoryProvider(GitHubMixin, providers.RepositoryProvider):
         ]
 
     def compare_commits(self, repo, start_sha, end_sha, actor=None):
-        integration_id = repo.integration_id
-        if integration_id:
-            client = GitHubAppsClient(
-                Integration.objects.get(id=integration_id),
-            )
-        elif actor is not None:
-            client = self.get_client(actor)
-        else:
+        if actor is None:
             raise NotImplementedError('Cannot fetch commits anonymously')
+        client = self.get_client(actor)
 
         # use config name because that is kept in sync via webhooks
         name = repo.config['name']
