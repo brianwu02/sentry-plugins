@@ -138,7 +138,7 @@ class GitHubAppsProviderTest(PluginTestCase):
         'compare_commits',
         return_value={'commits': []}
     )
-    def test_compare_commits_no_start(self, mock_compare_commits):
+    def test_compare_commits(self, mock_compare_commits):
         organization = self.create_organization()
         integration = Integration.objects.create(
             provider='github_apps',
