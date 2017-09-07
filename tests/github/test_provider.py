@@ -92,3 +92,66 @@ class GitHubAppsProviderTest(PluginTestCase):
         assert OrganizationIntegration.objects.filter(
             organization=organization, integration=integration
         ).exists()
+
+    def test_delete_repository(self):
+        user = self.create_user()
+        organization = self.create_organization()
+        integration = Integration.objects.create(
+            provider='github_apps',
+            external_id='1',
+        )
+        repo = Repository.objects.create(
+            name='example-repo',
+            provider='github_apps',
+            organization_id=organization.id,
+            integration_id=integration.id,
+        )
+
+        # just check that it doesn't throw / try to delete a webhook
+        assert self.provider.delete_repository(repo=repo, actor=user) is None
+
+    @patch.object(
+        GitHubAppsClient,
+        'get_last_commits',
+        return_value=[]
+    )
+    def test_compare_commits_no_start(self, mock_get_last_commits):
+        organization = self.create_organization()
+        integration = Integration.objects.create(
+            provider='github_apps',
+            external_id='1',
+        )
+        repo = Repository.objects.create(
+            name='example-repo',
+            provider='github_apps',
+            organization_id=organization.id,
+            integration_id=integration.id,
+            config={'name': 'example-repo'},
+        )
+
+        self.provider.compare_commits(repo, None, 'a' * 40)
+
+        assert mock_get_last_commits.called
+
+    @patch.object(
+        GitHubAppsClient,
+        'compare_commits',
+        return_value={'commits': []}
+    )
+    def test_compare_commits_no_start(self, mock_compare_commits):
+        organization = self.create_organization()
+        integration = Integration.objects.create(
+            provider='github_apps',
+            external_id='1',
+        )
+        repo = Repository.objects.create(
+            name='example-repo',
+            provider='github_apps',
+            organization_id=organization.id,
+            integration_id=integration.id,
+            config={'name': 'example-repo'},
+        )
+
+        self.provider.compare_commits(repo, 'b' * 40, 'a' * 40)
+
+        assert mock_compare_commits.called
