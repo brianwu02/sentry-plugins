@@ -484,12 +484,12 @@ class GitHubAppsRepositoryProvider(GitHubRepositoryProvider):
 
     def compare_commits(self, repo, start_sha, end_sha, actor=None):
         integration_id = repo.integration_id
-        if integration_id is not None:
-            client = GitHubAppsClient(
-                Integration.objects.get(id=integration_id),
-            )
-        else:
+        if integration_id is None:
             raise NotImplementedError('GitHub apps requires an integration id to fetch commits')
+
+        client = GitHubAppsClient(
+            Integration.objects.get(id=integration_id),
+        )
 
         # use config name because that is kept in sync via webhooks
         name = repo.config['name']
