@@ -34,6 +34,13 @@ ERR_404 = (
     ' this organization (Account Settings > Authorized Applications > Sentry).'
 )
 
+ERR_422_REPO = (
+    'GitHub returned a 422 Validation failed. This usually means that there is '
+    'already a webhook set up for Sentry for this repository. Please go to your '
+    'repository settings, click on the Webhooks tab, and delete the existing webhook '
+    'before adding the repository again.'
+)
+
 
 class GitHubMixin(object):
     def message_from_error(self, exc):
@@ -343,6 +350,11 @@ class GitHubRepositoryProvider(GitHubMixin, providers.RepositoryProvider):
                 }
             )
         except Exception as e:
+            self.logger.exception('Unable to create webhook %s', six.text_type(e))
+
+            if isinstance(e, ApiError) and e.code == 422:
+                raise PluginError(ERR_422_REPO)
+
             self.raise_error(e)
         else:
             return {
